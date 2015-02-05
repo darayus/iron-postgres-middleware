@@ -34,9 +34,9 @@ impl PostgresMiddleware {
   /// ```
   ///
   /// **Panics** if there are any errors connecting to the postgresql database.
-  pub fn new(pg_connection_str: &str) -> PostgresMiddleware {
+  pub fn new(pg_connection_str: &str, ssl_mode: SslMode) -> PostgresMiddleware {
     let config = Default::default();
-    let manager = PostgresConnectionManager::new(pg_connection_str, SslMode::None);
+    let manager = PostgresConnectionManager::new(pg_connection_str, ssl_mode);
     let error_handler = r2d2::LoggingErrorHandler;
     let pool = Arc::new(r2d2::Pool::new(config, manager, Box::new(error_handler)).unwrap());
     PostgresMiddleware {
@@ -81,4 +81,11 @@ impl<'a> PostgresReqExt for Request<'a> {
 
     return poll.get().unwrap();
   }
+}
+
+pub fn get_shared_pool(pg_connection_str: &str, ssl_mode: SslMode) -> SharedPostgresPool {
+    let config = Default::default();
+    let manager = PostgresConnectionManager::new(pg_connection_str, ssl_mode);
+    let error_handler = r2d2::LoggingErrorHandler;
+    return Arc::new(r2d2::Pool::new(config, manager, Box::new(error_handler)).unwrap());
 }
