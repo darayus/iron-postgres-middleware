@@ -12,11 +12,14 @@ use std::default::Default;
 use postgres::{SslMode};
 use r2d2_postgres::PostgresConnectionManager;
 
+pub type PostgresPool = r2d2::Pool<r2d2_postgres::PostgresConnectionManager>;
+pub type SharedPostgresPool = Arc<PostgresPool>;
+
 pub struct PostgresMiddleware {
-  pub pool: Arc<r2d2::Pool<r2d2_postgres::PostgresConnectionManager>>,
+  pub pool: SharedPostgresPool,
 }
 
-struct Value(Arc<r2d2::Pool<r2d2_postgres::PostgresConnectionManager>>);
+struct Value(SharedPostgresPool);
 
 impl typemap::Key for PostgresMiddleware { type Value = Value; }
 
@@ -29,6 +32,10 @@ impl PostgresMiddleware {
     PostgresMiddleware {
       pool: pool,
     }
+  }
+
+  pub fn from_pool(pool: SharedPostgresPool) -> PostgresMiddleware {
+    PostgresMiddleware {pool: pool}
   }
 }
 
